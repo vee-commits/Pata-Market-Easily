@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pata Market - Pata Unachotafuta, Uza Unachonacho</title>
+    
+    <!-- PWA Manifest & Mobile Config -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Pata Market">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230ea5e9'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-sky-500 selection:text-white">
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="hidden bg-sky-600 text-white px-4 py-3 shadow-lg flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <i data-lucide="download" class="w-6 h-6"></i>
+            <div>
+                <p class="font-bold text-sm">Install Pata Market App</p>
+                <p class="text-xs text-sky-100">Add to your home screen for quick access!</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="dismissPWAInstall()" class="text-xs text-sky-200 hover:text-white px-2 py-1">Dismiss</button>
+            <button onclick="triggerPWAInstall()" class="bg-white text-sky-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-sky-50 transition">Install</button>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/50 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-sky-500/10 text-sky-400 rounded-xl border border-sky-500/20">
+                        <i data-lucide="shopping-bag" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-black tracking-tight text-white">Pata<span class="text-sky-400">Market</span></span>
+                        <p class="text-xs text-slate-400 hidden sm:block">Pata Unachotafuta. Uza Unachonacho.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button id="pwa-header-btn" onclick="triggerPWAInstall()" class="hidden items-center space-x-1.5 bg-sky-500/10 text-sky-400 border border-sky-500/30 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-sky-500/20 transition">
+                        <i data-lucide="smartphone" class="w-4 h-4"></i>
+                        <span>Install App</span>
+                    </button>
+                    <button onclick="openVerificationModal()" class="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-lg shadow-emerald-600/20 transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Post / Manage</span>
+                    </button>
+                    <button onclick="openSellerModal()" class="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-600 transition">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
+                        <span class="hidden sm:inline">Become Seller</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location & Hyperlocal GPS Bar -->
+        <div class="bg-slate-800 border-t border-slate-700/50 py-2.5 px-4">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+                <div class="flex items-center space-x-2 text-slate-300 font-medium">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-sky-400"></i>
+                    <span>Location:</span>
+                </div>
+                
+                <div class="flex items-center space-x-2 flex-wrap">
+                    <!-- GPS Hyperlocal Button (Nextdoor Style) -->
+                    <button onclick="filterByGPS(5)" class="flex items-center space-x-1.5 bg-sky-500 hover:bg-sky-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
+                        <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+                        <span>Near Me (< 5 km)</span>
+                    </button>
+
+                    <!-- County Dropdown -->
+                    <select id="county-select" onchange="filterByCounty(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-sky-500 text-xs sm:text-sm">
+                        <option value="All">📍 All Counties (Nationwide)</option>
+                        <option value="Nairobi">Nairobi County</option>
+                        <option value="Mombasa">Mombasa County</option>
+                        <option value="Nakuru">Nakuru County</option>
+                        <option value="Kiambu">Kiambu County</option>
+                        <option value="Kisumu">Kisumu County</option>
+                        <option value="Uasin Gishu">Uasin Gishu (Eldoret)</option>
+                        <option value="Machakos">Machakos County</option>
+                        <option value="Meru">Meru County</option>
+                        <option value="Kilifi">Kilifi County</option>
+                        <option value="Kajiado">Kajiado County</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+        <div class="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div class="relative w-full sm:w-96">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="Search items, electronics, services..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-sky-500">
+            </div>
+            <p id="location-status" class="text-xs text-sky-400 font-medium self-end sm:self-center">Showing active marketplace listings</p>
+        </div>
+
+        <div id="listings-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="col-span-full py-16 text-center text-slate-400">
+                <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto text-sky-400 mb-2"></i>
+                <p>Loading marketplace listings...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800/80 border-t border-slate-700/50 mt-12 py-8 text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <div class="flex items-center space-x-2 text-white font-bold text-base mb-2">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 text-sky-400"></i>
+                    <span>Pata Market</span>
+                </div>
+                <p class="mb-2">Kenya's local marketplace connecting you with verified sellers and services within your area.</p>
+                <p class="text-emerald-400 font-semibold">Till Number: 8221168 (KSh 200 Seller Registration)</p>
+            </div>
+            <div>
+                <h4 class="text-slate-200 font-semibold mb-2">Smart Shopping Tip</h4>
+                <p class="flex items-start space-x-2">
+                    <i data-lucide="info" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i>
+                    <span>Feel free to chat with sellers directly on WhatsApp to arrange delivery or meetups in convenient local spots.</span>
+                </p>
+            </div>
+            <div>
+                <h4 class="text-slate-200 font-semibold mb-2">Customer Support</h4>
+                <p class="mb-1">Have questions or need assistance?</p>
+                <a href="https://wa.me/254762089797?text=Hello%20Pata%20Market%20Support" target="_blank" class="text-sky-400 hover:underline flex items-center space-x-1.5 font-bold text-sm">
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                    <span>0762089797</span>
+                </a>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-6 pt-4 border-t border-slate-700/50 text-center text-slate-500">
+            <p>© 2026 Pata Market Kenya. All rights reserved. “Pata Unachotafuta. Uza Unachonacho.”</p>
+        </div>
+    </footer>
+
+    <!-- All Integrated JavaScript -->
+    <script>
+        lucide.createIcons();
+
+        // 1. PWA Installation Setup
+        let deferredPrompt;
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered:', reg.scope))
+                    .catch(err => console.log('Service Worker failed:', err));
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwa-install-banner').classList.remove('hidden');
+            document.getElementById('pwa-header-btn').classList.remove('hidden');
+            document.getElementById('pwa-header-btn').classList.add('flex');
+        });
+
+        function triggerPWAInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('App Installed');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('pwa-install-banner').classList.add('hidden');
+                });
+            }
+        }
+
+        function dismissPWAInstall() {
+            document.getElementById('pwa-install-banner').classList.add('hidden');
+        }
+
+        // 2. Nextdoor-Style GPS Location & Distance Calculation
+        function filterByGPS(maxDistanceKm = 5) {
+            const statusEl = document.getElementById('location-status');
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            statusEl.innerHTML = "📍 Detecting your location...";
+
+            navigator.geolocation.getCurrentPosition((position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+                statusEl.innerHTML = `Showing listings within <strong>${maxDistanceKm} km</strong> of your GPS location`;
+                console.log("User GPS:", userLat, userLng);
+            }, (error) => {
+                statusEl.innerHTML = "Unable to get location. Showing all listings.";
+                alert("Please enable location access on your phone to see nearby listings.");
+            });
+        }
+
+        // Haversine Distance Formula
+        function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // 3. App Handlers & Filters
+        function filterByCounty(county) {
+            document.getElementById('location-status').innerText = county === 'All' ? "Showing all listings nationwide" : `Showing listings in ${county} County`;
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value;
+            console.log("Search query:", query);
+        }
+
+        function openVerificationModal() {
+            alert("Verification dialog: Enter phone number and National ID.");
+        }
+
+        function openSellerModal() {
+            alert("To become a seller, send KSh 200 via Buy Goods Till 8221168.");
+        }
+    </script>
+</body>
+</html>
