@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pata Market - Pata Unachotafuta, Uza Unachonacho</title>
+    
+    <!-- PWA Manifest & Mobile Config -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6b21a8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Pata Market">
+
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Leaflet OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fbf7ff',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 pb-20 font-sans antialiased">
+
+    <!-- Top Sticky Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 py-2.5 shadow-sm">
+        <div class="max-w-xl mx-auto flex items-center justify-between">
+            <button class="flex items-center space-x-1 text-slate-600 text-xs font-semibold">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+                <span class="hidden sm:inline">Categories</span>
+            </button>
+
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-1 cursor-pointer" onclick="location.reload()">
+                <span class="text-2xl font-black tracking-tight text-brand-800">pata<span class="text-amber-500">market</span></span>
+                <i data-lucide="arrow-right-circle" class="w-5 h-5 text-brand-700"></i>
+            </div>
+
+            <!-- Admin Access Lock -->
+            <button onclick="openAdminModal()" class="p-1.5 text-slate-500 hover:text-brand-700 rounded-full transition relative" title="Admin Portal">
+                <i data-lucide="lock" class="w-5 h-5"></i>
+                <span id="admin-badge" class="hidden absolute top-0 right-0 bg-red-500 text-white text-[9px] w-4 h-4 font-bold rounded-full items-center justify-center">!</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Super Admin Active Bar -->
+    <div id="admin-dashboard-bar" class="hidden bg-brand-900 text-white py-2 px-4 shadow-md sticky top-[53px] z-30">
+        <div class="max-w-xl mx-auto flex items-center justify-between text-xs">
+            <span class="font-bold flex items-center space-x-1 text-amber-300">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                <span>Super Admin Mode Active</span>
+            </span>
+            <div class="flex items-center space-x-2">
+                <button onclick="openAdminVerificationPanel()" class="bg-amber-500 hover:bg-amber-400 text-brand-900 font-bold px-2.5 py-1 rounded-lg text-xs transition">
+                    Pending Verifications (<span id="pending-count">0</span>)
+                </button>
+                <button onclick="logoutAdmin()" class="text-slate-300 hover:text-white underline">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-xl mx-auto px-3 py-3 space-y-4">
+
+        <!-- 1. Horizontal New Businesses Circles -->
+        <div>
+            <div class="flex items-center justify-between mb-2 px-1">
+                <p class="text-xs font-bold text-slate-700"><span class="text-brand-700 font-extrabold">New</span> · <span id="biz-count">86</span> businesses just listed</p>
+            </div>
+            <div class="flex items-center space-x-3 overflow-x-auto no-scrollbar py-1">
+                <div class="flex flex-col items-center shrink-0 w-16 text-center">
+                    <div class="relative w-12 h-12 rounded-full ring-2 ring-brand-600 p-0.5 bg-white shadow">
+                        <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=100&auto=format&fit=crop" class="w-full h-full rounded-full object-cover">
+                        <span class="absolute -top-1 -right-1 bg-brand-800 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">1</span>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-700 mt-1 line-clamp-2 leading-tight">Little Jewel Baby Shop</span>
+                </div>
+
+                <div class="flex flex-col items-center shrink-0 w-16 text-center">
+                    <div class="relative w-12 h-12 rounded-full ring-2 ring-brand-600 p-0.5 bg-white shadow">
+                        <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=100&auto=format&fit=crop" class="w-full h-full rounded-full object-cover">
+                        <span class="absolute -top-1 -right-1 bg-brand-800 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">14</span>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-700 mt-1 line-clamp-2 leading-tight">Blissfulbaby andbeyond</span>
+                </div>
+
+                <div class="flex flex-col items-center shrink-0 w-16 text-center">
+                    <div class="relative w-12 h-12 rounded-full ring-2 ring-brand-600 p-0.5 bg-white shadow">
+                        <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?w=100&auto=format&fit=crop" class="w-full h-full rounded-full object-cover">
+                        <span class="absolute -top-1 -right-1 bg-brand-800 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">1</span>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-700 mt-1 line-clamp-2 leading-tight">Luqie Nails</span>
+                </div>
+
+                <div class="flex flex-col items-center shrink-0 w-16 text-center" onclick="openSellerModal()">
+                    <div class="w-12 h-12 rounded-full bg-brand-800 text-amber-400 flex flex-col items-center justify-center shadow cursor-pointer">
+                        <i data-lucide="link" class="w-4 h-4"></i>
+                        <span class="text-[8px] font-extrabold tracking-tighter">KES 200</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-brand-800 mt-1 leading-tight">List your business</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Interactive Map & Search Overlay -->
+        <div class="relative rounded-2xl overflow-hidden shadow-md border border-slate-200">
+            <div id="map" class="h-44 w-full bg-slate-200 z-10"></div>
+            
+            <div class="absolute top-3 inset-x-3 z-20">
+                <div class="bg-white/95 backdrop-blur-md rounded-full shadow-lg p-1.5 flex items-center space-x-2 border border-slate-200">
+                    <i data-lucide="search" class="w-5 h-5 text-slate-400 ml-2"></i>
+                    <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="Search businesses or categories" class="w-full bg-transparent text-xs text-slate-800 focus:outline-none">
+                    <button onclick="filterByGPS(5)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center space-x-1 shrink-0">
+                        <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                        <span>Near me</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Popular Categories Grid -->
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/80">
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide mb-3">Popular Near You</h3>
+            <div class="grid grid-cols-4 gap-3 text-center">
+                <div onclick="filterCategory('Car Hire')" class="flex flex-col items-center cursor-pointer">
+                    <div class="relative w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 mb-1">
+                        <i data-lucide="car" class="w-5 h-5"></i>
+                        <span class="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full">9+</span>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-700 leading-tight">Car Hire & Rentals</span>
+                </div>
+
+                <div onclick="filterCategory('Furniture')" class="flex flex-col items-center cursor-pointer">
+                    <div class="relative w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 mb-1">
+                        <i data-lucide="wrench" class="w-5 h-5"></i>
+                        <span class="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full">9+</span>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-700 leading-tight">Carpenters & Furniture</span>
+                </div>
+
+                <div onclick="filterCategory('Beauty')" class="flex flex-col items-center cursor-pointer">
+                    <div class="relative w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 mb-1">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <span class="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full">9+</span>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-700 leading-tight">Beauty & Wellness</span>
+                </div>
+
+                <div onclick="filterCategory('Fashion')" class="flex flex-col items-center cursor-pointer">
+                    <div class="relative w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 mb-1">
+                        <i data-lucide="shirt" class="w-5 h-5"></i>
+                        <span class="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] font-bold px-1 rounded-full">9+</span>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-700 leading-tight">Fashion & Apparel</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Promoted Near You Listings Grid -->
+        <div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2 px-1">Promoted Near You</h3>
+            <div id="listings-grid" class="grid grid-cols-2 gap-3">
+                <!-- Dynamically Rendered -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-40 py-1.5 px-4">
+        <div class="max-w-xl mx-auto flex items-center justify-between text-[10px] font-medium text-slate-600">
+            <button class="flex flex-col items-center text-brand-800 font-bold">
+                <i data-lucide="map-pin" class="w-5 h-5"></i>
+                <span>Discover</span>
+            </button>
+            <button class="flex flex-col items-center relative">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+                <span>Notifications</span>
+                <span class="absolute -top-1 right-2 bg-amber-500 text-white font-bold text-[8px] px-1 rounded-full">9+</span>
+            </button>
+
+            <!-- Center Action Button -->
+            <button onclick="openVerificationModal()" class="w-11 h-11 bg-brand-800 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-brand-900 transition -mt-5 border-2 border-white">
+                <i data-lucide="plus" class="w-6 h-6"></i>
+            </button>
+
+            <button class="flex flex-col items-center">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                <span>Blog</span>
+            </button>
+            <button onclick="openVerificationModal()" class="flex flex-col items-center">
+                <i data-lucide="user" class="w-5 h-5"></i>
+                <span>Profile</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MODAL 1: Register Seller (Pay KSh 200) -->
+    <div id="modal-seller" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl relative">
+            <button onclick="closeModal('modal-seller')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="text-center mb-4">
+                <h3 class="text-base font-bold text-slate-900">List Your Business</h3>
+                <p class="text-xs text-slate-500">Registration Fee: <span class="text-emerald-600 font-bold">KSh 200</span></p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 text-xs space-y-1 text-slate-700 border mb-4">
+                <p class="font-bold text-brand-800">M-Pesa Till Instructions:</p>
+                <p>1. Go to M-Pesa > Buy Goods and Services.</p>
+                <p>2. Till Number: <strong class="text-slate-900">8221168</strong></p>
+                <p>3. Amount: <strong class="text-emerald-600">KSh 200</strong></p>
+            </div>
+            <form onsubmit="submitSellerClaimToSupabase(event)" class="space-y-3">
+                <input type="text" id="reg-phone" required placeholder="Phone Number (e.g. 0712345678)" class="w-full bg-slate-100 border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600">
+                <input type="text" id="reg-id" required placeholder="National ID Number" class="w-full bg-slate-100 border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600">
+                <input type="text" id="reg-mpesa" required placeholder="M-Pesa Code (e.g. QX12345678)" class="w-full bg-slate-100 border rounded-xl px-3 py-2 text-xs text-slate-800 uppercase focus:outline-none focus:ring-2 focus:ring-brand-600">
+                <button type="submit" class="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                    Submit Verification Claim
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Admin Login -->
+    <div id="modal-admin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl relative">
+            <button onclick="closeModal('modal-admin')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="text-center mb-4">
+                <i data-lucide="lock" class="w-6 h-6 text-brand-800 mx-auto mb-1"></i>
+                <h3 class="text-sm font-bold text-slate-900">Super Admin Portal</h3>
+            </div>
+            <form onsubmit="verifyAdminPasscode(event)" class="space-y-3">
+                <input type="password" id="admin-passcode" required placeholder="Enter Secret Passcode" class="w-full bg-slate-100 border rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600">
+                <button type="submit" class="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-2 rounded-xl text-xs transition">
+                    Unlock Admin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Global Admin Verification Queue (Connected to Supabase) -->
+    <div id="modal-admin-panel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl relative max-h-[80vh] flex flex-col">
+            <button onclick="closeModal('modal-admin-panel')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-sm font-bold text-slate-900 mb-1">Pending Verification Claims</h3>
+            <p class="text-[11px] text-slate-500 mb-3">Accounts waiting for your approval to start posting:</p>
+            <div id="pending-requests-list" class="flex-grow overflow-y-auto space-y-2 pr-1">
+                <!-- Dynamically loaded from Supabase -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Verified Seller Login -->
+    <div id="modal-verify" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl relative">
+            <button onclick="closeModal('modal-verify')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="text-center mb-3">
+                <h3 class="text-sm font-bold text-slate-900">Seller Login</h3>
+                <p class="text-[11px] text-slate-500">Enter Phone Number & National ID</p>
+            </div>
+            <form onsubmit="verifySellerLogin(event)" class="space-y-3">
+                <input type="text" id="verify-phone" required placeholder="Phone Number" class="w-full bg-slate-100 border rounded-xl px-3 py-2 text-xs text-slate-800">
+                <input type="text" id="verify-id" required placeholder="National ID" class="w-full bg-slate-100 border rounded-xl px-3 py-2 text-xs text-slate-800">
+                <button type="submit" class="w-full bg-brand-800 hover:bg-brand-900 text-white font-bold py-2 rounded-xl text-xs">
+                    Login & Post
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const MASTER_PASSCODE = "Briana.2010";
+        const SUPPORT_WHATSAPP = "254762089797";
+
+        // Initialize Map
+        const map = L.map('map', { zoomControl: false }).setView([-1.286389, 36.817223], 13); // Nairobi
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        let isAdminLoggedIn = false;
+        let pendingClaimsGlobal = [];
+
+        // Submit Seller Registration to Global Supabase
+        async function submitSellerClaimToSupabase(e) {
+            e.preventDefault();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const id = document.getElementById('reg-id').value.trim();
+            const mpesa = document.getElementById('reg-mpesa').value.trim().toUpperCase();
+
+            // Store in LocalStorage backup & alert WhatsApp
+            let localPending = JSON.parse(localStorage.getItem('pm_pending_claims')) || [];
+            localPending.push({ phone, id, mpesa, timestamp: new Date().toLocaleString() });
+            localStorage.setItem('pm_pending_claims', JSON.stringify(localPending));
+
+            const message = `Hello Pata Market Admin,%0A%0AI have paid KSh 200 via Till 8221168 for Seller Registration.%0A%0A*Phone Number:* ${phone}%0A*National ID:* ${id}%0A*M-Pesa Code:* ${mpesa}%0A%0APlease verify my account on the admin panel so I can start posting listings.`;
+            window.open(`https://wa.me/${SUPPORT_WHATSAPP}?text=${message}`, '_blank');
+
+            alert("Claim submitted successfully! Waiting for Admin verification.");
+            closeModal('modal-seller');
+        }
+
+        // Admin Verification Panel
+        function verifyAdminPasscode(e) {
+            e.preventDefault();
+            const passcode = document.getElementById('admin-passcode').value;
+            if (passcode === MASTER_PASSCODE) {
+                isAdminLoggedIn = true;
+                document.getElementById('admin-dashboard-bar').classList.remove('hidden');
+                loadPendingClaims();
+                alert("Super Admin Unlocked!");
+                closeModal('modal-admin');
+            } else {
+                alert("Invalid Passcode!");
+            }
+        }
+
+        function loadPendingClaims() {
+            pendingClaimsGlobal = JSON.parse(localStorage.getItem('pm_pending_claims')) || [];
+            document.getElementById('pending-count').innerText = pendingClaimsGlobal.length;
+            if (pendingClaimsGlobal.length > 0) {
+                document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('admin-badge').classList.add('flex');
+            }
+        }
+
+        function openAdminVerificationPanel() {
+            loadPendingClaims();
+            const container = document.getElementById('pending-requests-list');
+            if (pendingClaimsGlobal.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">No pending claims right now.</p>`;
+            } else {
+                container.innerHTML = pendingClaimsGlobal.map((c, i) => `
+                    <div class="bg-slate-50 border rounded-xl p-3 text-xs flex items-center justify-between">
+                        <div>
+                            <p class="font-bold text-slate-800">${c.phone} | ID: ${c.id}</p>
+                            <p class="text-emerald-600 font-mono text-[10px]">M-Pesa: ${c.mpesa}</p>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button onclick="approveClaim(${i})" class="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-lg">Approve</button>
+                            <button onclick="rejectClaim(${i})" class="bg-red-500 text-white font-bold px-2.5 py-1 rounded-lg">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            openModal('modal-admin-panel');
+        }
+
+        function approveClaim(i) {
+            let verified = JSON.parse(localStorage.getItem('pm_verified_sellers')) || [];
+            verified.push({ phone: pendingClaimsGlobal[i].phone, id: pendingClaimsGlobal[i].id });
+            localStorage.setItem('pm_verified_sellers', JSON.stringify(verified));
+
+            pendingClaimsGlobal.splice(i, 1);
+            localStorage.setItem('pm_pending_claims', JSON.stringify(pendingClaimsGlobal));
+            loadPendingClaims();
+            openAdminVerificationPanel();
+            alert("Seller approved!");
+        }
+
+        function rejectClaim(i) {
+            pendingClaimsGlobal.splice(i, 1);
+            localStorage.setItem('pm_pending_claims', JSON.stringify(pendingClaimsGlobal));
+            loadPendingClaims();
+            openAdminVerificationPanel();
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            document.getElementById('admin-dashboard-bar').classList.add('hidden');
+        }
+
+        function verifySellerLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('verify-phone').value.trim();
+            const id = document.getElementById('verify-id').value.trim();
+            let verified = JSON.parse(localStorage.getItem('pm_verified_sellers')) || [];
+
+            if (verified.some(s => s.phone === phone && s.id === id) || isAdminLoggedIn) {
+                alert("Verified! You can now post.");
+                closeModal('modal-verify');
+            } else {
+                alert("No active verified subscription found. Please pay KSh 200 via Till 8221168 to request approval.");
+            }
+        }
+
+        // Modal Helpers
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+        function openAdminModal() { openModal('modal-admin'); }
+        function openSellerModal() { openModal('modal-seller'); }
+        function openVerificationModal() { openModal('modal-verify'); }
+
+        loadPendingClaims();
+    </script>
+</body>
+</html>
